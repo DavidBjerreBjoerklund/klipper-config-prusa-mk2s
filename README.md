@@ -1,7 +1,15 @@
 # klipper-config-prusa-mk2s
-Klipper config files for Prusa MK2s with LCD interface similar to the Prusa Original Firmware
+Klipper config files for the Prusa MK2 family with an LCD interface similar to the Prusa Original Firmware. The default profile now targets the MK2.5 upgrade, which replaces the original PINDA probe with the temperature-compensated PINDA 2 sensor and relies on standard bed mesh leveling instead of the older XYZ calibration routine.
 
-Please notice that you could need to adjust the probe offsets slightly in config/mk2s/probe.cfg since the values from the Original Prusa Firmware were not well centered in my setup
+## MK2.5 upgrade highlights
+
+* **PINDA 2 thermistor support.** The `temperature_sensor pinda` section reads the built-in thermistor on analog pin A1 so Klipper can account for probe temperature drift. The value is exposed on the LCD status screen and can be queried from the console using standard temperature commands.
+* **`PINDA_PREHEAT` macro.** Use `PINDA_PREHEAT` before a mesh or first-layer calibration to warm the bed and wait until the probe temperature is stable (default 35 °C). Optional parameters allow you to override the bed (`B`), nozzle (`N`), target (`T`), and hysteresis (`H`) values.
+* **Bed mesh leveling.** The included `G80`/`G81` macros provide the MK2.5-style mesh leveling workflow that supersedes the retired XYZ calibration from the original MK2 firmware.
+* **Live Adjust Z during a print.** The LCD `Live adjust Z` entry now proxies Prusa's firmware behaviour by driving a dedicated `LIVE_Z` macro. Adjustments immediately move the nozzle, are compatible with `M290` commands from OctoPrint or slicer start G-code, and persist until you either apply them to the probe with `Z_OFFSET_APPLY_PROBE` or reset them with `LIVE_Z RESET=1` (invoked automatically on `CANCEL_PRINT`).
+* **12 V E3D Revo hotend ready.** The stock extruder configuration now targets the Semitec 104NT thermistor bundled with the Revo heater assembly, so temperatures and safety checks line up with the drop-in 0.4 mm Revo upgrade. Run a PID tune after installation to dial in your specific heater cartridge.
+
+Please notice that you could need to adjust the probe offsets slightly in config/mk25s/probe.cfg since the values from the Original Prusa Firmware were not well centered in my setup
 
 Pressure advance values I found on my system (to be used in Filament-->Custom GCode--> Start GCODE):
 
