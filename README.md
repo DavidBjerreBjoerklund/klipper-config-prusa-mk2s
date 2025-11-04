@@ -1,6 +1,10 @@
 # klipper-config-prusa-mk2s
 Klipper config files for the Prusa MK2 family with an LCD interface similar to the Prusa Original Firmware. The default profile now targets the MK2.5 upgrade, which replaces the original PINDA probe with the temperature-compensated PINDA 2 sensor and relies on standard bed mesh leveling instead of the older XYZ calibration routine.
 
+## PrusaSlicer profile
+
+The `config/prusaslicer/mk2s_input_shaper_0.4.ini` profile is based on Prusa's MK4 input shaper printer preset and tuned for this Klipper configuration. It keeps the MK4 motion defaults while switching to Klipper-compatible start and end G-code that leverage the bundled `PINDA_PREHEAT` and `G80` macros. Import the profile into PrusaSlicer to create G-code that matches the new input shaper settings and printer macros. Advanced MK4-specific firmware integrations (for example, network upload hooks or segmented purge routines) are not part of this conversion, so expect to adjust or disable those features if you import additional presets from Prusa.
+
 ## MK2.5 upgrade highlights
 
 * **PINDA 2 thermistor support.** The `temperature_sensor pinda` section reads the built-in thermistor on analog pin A1 so Klipper can account for probe temperature drift. The value is exposed on the LCD status screen and can be queried from the console using standard temperature commands.
@@ -8,6 +12,10 @@ Klipper config files for the Prusa MK2 family with an LCD interface similar to t
 * **Bed mesh leveling.** The included `G80`/`G81` macros provide the MK2.5-style mesh leveling workflow that supersedes the retired XYZ calibration from the original MK2 firmware.
 * **Live Adjust Z during a print.** The LCD `Live adjust Z` entry now proxies Prusa's firmware behaviour by driving a dedicated `LIVE_Z` macro. Adjustments immediately move the nozzle, are compatible with `M290` commands from OctoPrint or slicer start G-code, and persist until you either apply them to the probe with `Z_OFFSET_APPLY_PROBE` or reset them with `LIVE_Z RESET=1` (invoked automatically on `CANCEL_PRINT`).
 * **12 V E3D Revo hotend ready.** The stock extruder configuration now targets the Semitec 104NT thermistor bundled with the Revo heater assembly, so temperatures and safety checks line up with the drop-in 0.4 mm Revo upgrade. Run a PID tune after installation to dial in your specific heater cartridge.
+
+## MK3S-style filament autoload
+
+The Mini-Rambo's IR filament sensor now feeds Klipper's `filament_switch_sensor` module via `config/custom/autoload.cfg`. When the sensor trips, the `FS_AUTOLOAD_AUTO_TRIGGER` path seats the filament, prompts you to pick a material preset, then heats to the MK3S nozzle/bed targets before performing the 70 mm fast push and 25 mm slow purge that Prusa's `M701` command uses for consistent loading.【F:config/custom/autoload.cfg†L1-L130】【F:config/custom/macro.cfg†L200-L208】 The LCD menu adds an **Autoload filament** list under Filament with preset buttons for PLA, PET, ASA, ABS, PC, and FLEX so you can manually start or cancel the workflow without waiting for the sensor.【F:config/custom/menu_original_prusa.cfg†L295-L353】 Runout events still pause prints, but idle runouts simply raise a console message to mirror the original firmware.【F:config/custom/autoload.cfg†L149-L173】
 
 Please notice that you could need to adjust the probe offsets slightly in config/mk25s/probe.cfg since the values from the Original Prusa Firmware were not well centered in my setup
 
@@ -36,9 +44,7 @@ Pressure advance values I found on my system (to be used in Filament-->Custom GC
   
 Optional Features (added 09/09/2022):
 
-to be enabled by uncommenting (deleting the #) in the file printer.cfg
-
-#[include config/custom/menu_autoload.cfg] --> creates autoload/unload filament entries in the Preheat menu (macro to automatically heat to a certain temperature, load/unload the filament, then cooldown)
+to be enabled by uncommenting (deleting the #) in the file printer.cfg. The MK3S-style autoload workflow in `config/custom/autoload.cfg` is now included by default; comment out the include in `printer.cfg` if you prefer the legacy manual menus.【F:printer.cfg†L12-L15】
 
 #[include config/custom/macro_cold_pull.cfg] --> creates automatical Coldpull entry in the Preheat Menu (preheat to selectable temperature [default 85°C for PLA], then automatically coldpull using the motor, no hand pull required, it works very well for PLA at 85 °C, beep at the end to alert the user [remember to pull the lever on the extruder to extract the filament after the automatic coldpull])
 
@@ -53,8 +59,9 @@ command in the start GCODE to let Klipper know the filament diameter initially u
 ## LCD SD card pinout
 
 The Mini-Rambo routes the LCD SD slot over the board's hardware SPI bus. For convenience the configuration now exposes those
-signals via the `board_pins lcd_sdcard` aliases in `config/mk25s/display.cfg`, along with an `input_pin lcd_sd_detect` helper so
-macros or menu entries can check whether a card is inserted.
+signals via the `board_pins lcd_sdcard` aliases in `config/mk25s/display.cfg`.  Newer Klipper builds provide an `input_pin
+lcd_sd_detect` helper for macros or menu entries to check whether a card is inserted; the definition is commented out by default
+so legacy installations that lack the `input_pin` module can still load the configuration.
 
 | Signal        | Arduino pin | AVR port | Notes |
 |---------------|-------------|----------|-------|
