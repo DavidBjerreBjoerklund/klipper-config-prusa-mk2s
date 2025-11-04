@@ -1,6 +1,10 @@
 # klipper-config-prusa-mk2s
 Klipper config files for the Prusa MK2 family with an LCD interface similar to the Prusa Original Firmware. The default profile now targets the MK2.5 upgrade, which replaces the original PINDA probe with the temperature-compensated PINDA 2 sensor and relies on standard bed mesh leveling instead of the older XYZ calibration routine.
 
+## PrusaSlicer profile
+
+The `config/prusaslicer/mk2s_input_shaper_0.4.ini` profile is based on Prusa's MK4 input shaper printer preset and tuned for this Klipper configuration. It keeps the MK4 motion defaults while switching to Klipper-compatible start and end G-code that leverage the bundled `PINDA_PREHEAT` and `G80` macros. Import the profile into PrusaSlicer to create G-code that matches the new input shaper settings and printer macros. Advanced MK4-specific firmware integrations (for example, network upload hooks or segmented purge routines) are not part of this conversion, so expect to adjust or disable those features if you import additional presets from Prusa.
+
 ## MK2.5 upgrade highlights
 
 * **PINDA 2 thermistor support.** The `temperature_sensor pinda` section reads the built-in thermistor on analog pin A1 so Klipper can account for probe temperature drift. The value is exposed on the LCD status screen and can be queried from the console using standard temperature commands.
