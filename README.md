@@ -57,8 +57,9 @@ command in the start GCODE to let Klipper know the filament diameter initially u
 ## LCD SD card pinout
 
 The Mini-Rambo routes the LCD SD slot over the board's hardware SPI bus. For convenience the configuration now exposes those
-signals via the `board_pins lcd_sdcard` aliases in `config/mk25s/display.cfg`, along with an `input_pin lcd_sd_detect` helper so
-macros or menu entries can check whether a card is inserted.
+signals via the `board_pins lcd_sdcard` aliases in `config/mk25s/display.cfg`.  Newer Klipper builds provide an `input_pin
+lcd_sd_detect` helper for macros or menu entries to check whether a card is inserted; the definition is commented out by default
+so legacy installations that lack the `input_pin` module can still load the configuration.
 
 | Signal        | Arduino pin | AVR port | Notes |
 |---------------|-------------|----------|-------|
