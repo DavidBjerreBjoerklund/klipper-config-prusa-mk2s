@@ -13,6 +13,10 @@ The `config/prusaslicer/mk2s_input_shaper_0.4.ini` profile is based on Prusa's M
 * **Live Adjust Z during a print.** The LCD `Live adjust Z` entry now proxies Prusa's firmware behaviour by driving a dedicated `LIVE_Z` macro. Adjustments immediately move the nozzle, are compatible with `M290` commands from OctoPrint or slicer start G-code, and persist until you either apply them to the probe with `Z_OFFSET_APPLY_PROBE` or reset them with `LIVE_Z RESET=1` (invoked automatically on `CANCEL_PRINT`).
 * **12 V E3D Revo hotend ready.** The stock extruder configuration now targets the Semitec 104NT thermistor bundled with the Revo heater assembly, so temperatures and safety checks line up with the drop-in 0.4 mm Revo upgrade. Run a PID tune after installation to dial in your specific heater cartridge.
 
+## MK3S-style filament autoload
+
+The Mini-Rambo's IR filament sensor now feeds Klipper's `filament_switch_sensor` module via `config/custom/autoload.cfg`. When the sensor trips and the nozzle is below the cold-extrude limit, `FS_AUTOLOAD_BEGIN` jumps to an **Autoload filament** menu so you can pick PLA, PETG, ASA, ABS, PC, or FLEX presets; the `FS_AUTOLOAD_PREHEAT` macro waits for the selected temperatures, plays a confirmation beep, and then exposes a dedicated **Load filament** entry once the hotend is ready.【F:config/custom/autoload.cfg†L1-L100】【F:config/custom/menu_original_prusa.cfg†L295-L353】 If the nozzle is already hot the workflow skips straight to the load prompt, and `FS_AUTOLOAD_LOAD` reuses the standard `load_filament` moves to push material without ever overriding Klipper's cold-extrusion guard.【F:config/custom/autoload.cfg†L102-L130】【F:config/custom/macro.cfg†L200-L208】 Runout events still pause active prints, but idle runouts simply raise a console message to mirror the original firmware.【F:config/custom/autoload.cfg†L154-L178】
+
 Please notice that you could need to adjust the probe offsets slightly in config/mk25s/probe.cfg since the values from the Original Prusa Firmware were not well centered in my setup
 
 Pressure advance values I found on my system (to be used in Filament-->Custom GCode--> Start GCODE):
@@ -40,9 +44,7 @@ Pressure advance values I found on my system (to be used in Filament-->Custom GC
   
 Optional Features (added 09/09/2022):
 
-to be enabled by uncommenting (deleting the #) in the file printer.cfg
-
-#[include config/custom/menu_autoload.cfg] --> creates autoload/unload filament entries in the Preheat menu (macro to automatically heat to a certain temperature, load/unload the filament, then cooldown)
+to be enabled by uncommenting (deleting the #) in the file printer.cfg. The MK3S-style autoload workflow in `config/custom/autoload.cfg` is now included by default; comment out the include in `printer.cfg` if you prefer the legacy manual menus.【F:printer.cfg†L12-L15】
 
 #[include config/custom/macro_cold_pull.cfg] --> creates automatical Coldpull entry in the Preheat Menu (preheat to selectable temperature [default 85°C for PLA], then automatically coldpull using the motor, no hand pull required, it works very well for PLA at 85 °C, beep at the end to alert the user [remember to pull the lever on the extruder to extract the filament after the automatic coldpull])
 
